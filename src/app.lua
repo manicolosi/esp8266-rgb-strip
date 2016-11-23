@@ -19,6 +19,9 @@ GAMMA = {
     863,873,884,894,904,915,925,936,946,957,968,979,990,1001,1012,1023
 };
 
+CLIENT_ID = node.chipid()
+TOPIC_PREFIX = "esp/" .. node.chipid() .. "/"
+
 m = nil
 
 RETAIN_FLAG = 1
@@ -35,7 +38,7 @@ RGB_TOPIC   = nil
 current = {255, 255, 255}
 
 local function publish(key, msg)
-    topic = config.mqtt.TOPIC_PREFIX .. key
+    topic = TOPIC_PREFIX .. key
     print("PUBLISH", topic, msg)
     m:publish(topic, msg, 0, RETAIN_FLAG)
 end
@@ -116,9 +119,9 @@ local function light_set(data)
 end
 
 local function mqtt_start()
-    m = mqtt.Client(config.mqtt.CLIENT_ID, 60)
+    m = mqtt.Client(CLIENT_ID, 60)
 
-    m:lwt(config.mqtt.TOPIC_PREFIX .. "state", "offline", 0, RETAIN_FLAG)
+    m:lwt(TOPIC_PREFIX .. "state", "offline", 0, RETAIN_FLAG)
 
     m:on("message", function(client, topic, data)
         if data ~= nil then
@@ -146,8 +149,8 @@ end
 function module.start()
     print("Starting")
 
-    LIGHT_TOPIC = config.mqtt.TOPIC_PREFIX .. "light/set"
-    RGB_TOPIC   = config.mqtt.TOPIC_PREFIX .. "rgb/set"
+    LIGHT_TOPIC = TOPIC_PREFIX .. "light/set"
+    RGB_TOPIC   = TOPIC_PREFIX .. "rgb/set"
 
     pwm.setup(R_PIN, FREQ, 512)
     pwm.setup(G_PIN, FREQ, 512)
