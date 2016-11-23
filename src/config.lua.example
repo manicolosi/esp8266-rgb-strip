@@ -1,0 +1,11 @@
+local module = {}
+
+module.wifi = {}
+module.wifi.SSID = "my-wifi"
+module.wifi.PASSPHRASE = "p@ssword"
+
+module.mqtt = {}
+module.mqtt.HOST = "mqtt-ip-address"
+module.mqtt.PORT = 1883
+
+return module
