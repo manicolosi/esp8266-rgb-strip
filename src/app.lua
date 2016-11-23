@@ -1,3 +1,6 @@
+-- DISCLAIMER: There's nothing here to be proud of, just hacked together until I
+-- find some time to refactor into something that isn't horrible.
+
 local module = {}
 
 GAMMA = {
