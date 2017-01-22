@@ -1,0 +1,14 @@
+{
+  "name": "Bookshelf",
+  "wifi": {
+    "ssid": "middle-earth",
+    "password": "B4HZokAtDjc8bsar"
+  },
+  "mqtt": {
+    "host": "control",
+    "port": 1883
+  },
+  "ota": {
+    "enabled": true
+  }
+}
