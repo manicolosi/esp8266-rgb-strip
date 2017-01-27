@@ -8,6 +8,7 @@ static const uint8_t LED_PIN_B = D5;
 static const char * color_names[] = {"red", "green", "blue"};
 static const uint8_t color_pins[] = {D6, D7, D5};
 static int color_values[] {0, 0, 0};
+static bool state_is_on = true;
 
 HomieNode stripNode("strip", "strip");
 
@@ -18,26 +19,14 @@ void setup_outputs() {
   }
 }
 
-uint8_t color_to_pin(const String& color) {
-  uint8_t pin = -1;
-
+int color_index(const String& color) {
   for(int i = 0; i < 3; i++) {
     if(strcmp(color.c_str(), color_names[i]) == 0) {
-      pin = color_pins[i];
+      return i;
     }
   }
 
-  return pin;
-}
-
-void update_color_value(const String& color, int value) {
-  for(int i = 0; i < 3; i++) {
-    if(strcmp(color.c_str(), color_names[i]) == 0) {
-      color_values[i] = value;
-    }
-  }
-
-  return;
+  return -1;
 }
 
 void update_rgb_property() {
@@ -48,14 +37,25 @@ void update_rgb_property() {
   return;
 }
 
-bool set_color(const String& color, const String& value) {
-  uint8_t pin = color_to_pin(color);
+void set_pin_color(int idx, int value, bool update_cache) {
+  uint8_t pin = color_pins[idx];
 
-  if(pin != -1) {
+  if(update_cache) {
+    color_values[idx] = value;
+  }
+
+  if(state_is_on) {
+    analogWrite(pin, value);
+  }
+}
+
+bool set_color(const String& color, const String& value) {
+  int idx = color_index(color);
+
+  if(idx != -1) {
     Homie.getLogger() << color << " set to " << value.toInt() << endl;
-    update_color_value(color, value.toInt());
+    set_pin_color(idx, value.toInt(), true);
     stripNode.setProperty(color).send(value);
-    analogWrite(pin, value.toInt());
   } else {
     Homie.getLogger() << color << " is invalid" << endl;
     return false;
@@ -98,6 +98,27 @@ bool rgb_handler(const HomieRange& range, const String& value) {
   return true;
 }
 
+bool state_handler(const HomieRange& range, const String& value) {
+  if(value == "on") {
+    state_is_on = true;
+    for(int i = 0; i < 3; i++) {
+      set_pin_color(i, color_values[i], false);
+    }
+    stripNode.setProperty("state").send("on");
+  } else if(value == "off") {
+    for(int i = 0; i < 3; i++) {
+      set_pin_color(i, 0, false);
+    }
+    state_is_on = false;
+    stripNode.setProperty("state").send("off");
+  } else {
+    Homie.getLogger() << "state '" << value << "' is invalid" << endl;
+    return false;
+  }
+
+  return true;
+}
+
 void setup() {
   setup_outputs();
   Serial.begin(115200);
@@ -108,6 +129,7 @@ void setup() {
   stripNode.advertise("green").settable(green_handler);
   stripNode.advertise("blue").settable(blue_handler);
   stripNode.advertise("rgb").settable(rgb_handler);
+  stripNode.advertise("state").settable(state_handler);
 }
 
 void loop() {
