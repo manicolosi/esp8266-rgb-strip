@@ -7,6 +7,7 @@ static const uint8_t LED_PIN_B = D5;
 
 static const char * color_names[] = {"red", "green", "blue"};
 static const uint8_t color_pins[] = {D6, D7, D5};
+static int color_values[] {0, 0, 0};
 
 HomieNode stripNode("strip", "strip");
 
@@ -29,11 +30,30 @@ uint8_t color_to_pin(const String& color) {
   return pin;
 }
 
+void update_color_value(const String& color, int value) {
+  for(int i = 0; i < 3; i++) {
+    if(strcmp(color.c_str(), color_names[i]) == 0) {
+      color_values[i] = value;
+    }
+  }
+
+  return;
+}
+
+void update_rgb_property() {
+  char buffer[15];
+  snprintf(buffer, 15, "%d,%d,%d", color_values[0], color_values[1], color_values[2]);
+
+  stripNode.setProperty("rgb").send(buffer);
+  return;
+}
+
 bool set_color(const String& color, const String& value) {
   uint8_t pin = color_to_pin(color);
 
   if(pin != -1) {
     Homie.getLogger() << color << " set to " << value.toInt() << endl;
+    update_color_value(color, value.toInt());
     stripNode.setProperty(color).send(value);
     analogWrite(pin, value.toInt());
   } else {
@@ -45,15 +65,21 @@ bool set_color(const String& color, const String& value) {
 }
 
 bool red_handler(const HomieRange& range, const String& value) {
-  return set_color("red", value);
+  bool ret_val = set_color("red", value);
+  update_rgb_property();
+  return ret_val;
 }
 
 bool green_handler(const HomieRange& range, const String& value) {
-  return set_color("green", value);
+  bool ret_val = set_color("green", value);
+  update_rgb_property();
+  return ret_val;
 }
 
 bool blue_handler(const HomieRange& range, const String& value) {
-  return set_color("blue", value);
+  bool ret_val = set_color("blue", value);
+  update_rgb_property();
+  return ret_val;
 }
 
 bool rgb_handler(const HomieRange& range, const String& value) {
@@ -67,7 +93,7 @@ bool rgb_handler(const HomieRange& range, const String& value) {
   set_color("red", r);
   set_color("green", g);
   set_color("blue", b);
-  stripNode.setProperty("rgb").send(value);
+  update_rgb_property();
 
   return true;
 }
