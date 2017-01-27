@@ -1,0 +1,3 @@
+[submodule "homie/lib/homie"]
+	path = homie/lib/homie
+	url = https://github.com/marvinroger/homie-esp8266.git
